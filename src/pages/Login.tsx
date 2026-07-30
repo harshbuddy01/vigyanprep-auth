@@ -17,7 +17,7 @@ export default function Login() {
     try {
       if (isSignUp) {
         // Sign Up
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {

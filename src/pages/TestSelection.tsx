@@ -92,7 +92,7 @@ export default function TestSelection() {
 
       // 2. Load Razorpay script and open checkout
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_TKAmZ5QydRUNs1',
         amount: order.amount,
         currency: order.currency,
         name: 'Vigyan.prep',

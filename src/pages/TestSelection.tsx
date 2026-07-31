@@ -13,18 +13,6 @@ interface TestSeries {
   is_active: boolean;
 }
 
-// Helper: get session token for SSO redirect
-async function getSessionToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || '';
-}
-
-// Build SSO URL to test.vigyanprep.com with token and testId
-function buildTestUrl(testId: string, token: string): string {
-  const base = 'https://test.vigyanprep.com';
-  const params = new URLSearchParams({ testId, token });
-  return `${base}/instructions?${params.toString()}`;
-}
 
 export default function TestSelection() {
   const navigate = useNavigate();
@@ -58,10 +46,33 @@ export default function TestSelection() {
     fetchData();
   }, [navigate]);
 
-  // Launch test with SSO token
   const handleStartTest = async (testId: string) => {
-    const token = await getSessionToken();
-    window.location.href = buildTestUrl(testId, token);
+    setError(null);
+    try {
+      // Get the student's current Supabase auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate('/'); return; }
+      
+      // Issue a short-lived single-use exam access code from the API
+      const res = await fetch('https://api.vigyanprep.com/api/exam-access/issue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ test_series_id: testId })
+      });
+      
+      if (!res.ok) throw new Error('Could not generate exam access. Please try again.');
+      const { code } = await res.json();
+      
+      // Redirect to test portal with ONLY the opaque code (not the JWT)
+      // Code expires in 60 seconds and is single-use
+      const testPortal = import.meta.env.VITE_TEST_PORTAL_URL || 'https://test.vigyanprep.com';
+      window.location.href = `${testPortal}/instructions?code=${encodeURIComponent(code)}`;
+    } catch (e: any) {
+      setError(e.message || 'Failed to launch exam portal.');
+    }
   };
 
   // Razorpay payment flow

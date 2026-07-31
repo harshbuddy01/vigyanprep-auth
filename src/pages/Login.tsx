@@ -25,11 +25,10 @@ export default function Login() {
         await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
         setMessage({ text: "Account created! Check your email to confirm.", type: "success" });
       } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
-        const token = data.session?.access_token || "";
-        setMessage({ text: "Login successful! Loading your tests...", type: "success" });
-        setTimeout(() => { window.location.href = `/tests?token=${encodeURIComponent(token)}`; }, 800);
+        setMessage({ text: 'Login successful! Loading your tests...', type: 'success' });
+        setTimeout(() => { window.location.href = '/tests'; }, 800);
       }
     } catch (err: any) {
       setMessage({ text: err.message || "An error occurred", type: "error" });

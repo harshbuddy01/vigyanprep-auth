@@ -22,13 +22,14 @@ export default function Login() {
           options: { data: { full_name: fullName } },
         });
         if (error) throw error;
-        await supabase.from("students").insert({ email, full_name: fullName });
+        await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
         setMessage({ text: "Account created! Check your email to confirm.", type: "success" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        setMessage({ text: "Login successful! Launching exam portal...", type: "success" });
-        setTimeout(() => { window.location.href = "https://test.vigyanprep.com"; }, 1000);
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+        const token = data.session?.access_token || "";
+        setMessage({ text: "Login successful! Loading your tests...", type: "success" });
+        setTimeout(() => { window.location.href = `/tests?token=${encodeURIComponent(token)}`; }, 800);
       }
     } catch (err: any) {
       setMessage({ text: err.message || "An error occurred", type: "error" });

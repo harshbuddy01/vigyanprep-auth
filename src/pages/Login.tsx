@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Eye, EyeOff, Lock, Mail, User, CheckCircle2, AlertCircle } from "lucide-react";
 
+import { setCookie } from "../lib/cookies";
+
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -19,20 +21,43 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName } },
         });
         if (error) throw error;
         await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
+
+        if (data?.session) {
+          const token = data.session.access_token;
+          setCookie("student_token", token);
+          setCookie("student_name", fullName);
+          setCookie("student_email", email);
+          localStorage.setItem("student_token", token);
+          localStorage.setItem("student_name", fullName);
+          localStorage.setItem("student_email", email);
+        }
+
         setMessage({ text: "Account created successfully! Check your email to confirm.", type: "success" });
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+
+        if (data?.session) {
+          const token = data.session.access_token;
+          const name = data.session.user?.user_metadata?.full_name || data.session.user?.email?.split("@")[0] || "Student";
+          setCookie("student_token", token);
+          setCookie("student_name", name);
+          setCookie("student_email", email);
+          localStorage.setItem("student_token", token);
+          localStorage.setItem("student_name", name);
+          localStorage.setItem("student_email", email);
+        }
+
         setMessage({ text: "Login successful! Loading your student portal...", type: "success" });
         setTimeout(() => {
-          window.location.href = "https://test.vigyanprep.com";
+          window.location.href = "https://test.vigyanprep.com/dashboard";
         }, 800);
       }
     } catch (err: any) {

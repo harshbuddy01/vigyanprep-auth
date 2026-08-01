@@ -27,7 +27,12 @@ export default function Login() {
           options: { data: { full_name: fullName } },
         });
         if (error) throw error;
-        await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
+        try {
+          await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
+        } catch (_) {}
+        try {
+          await supabase.from("users").upsert({ email, full_name: fullName, role: "student" }, { onConflict: "email" });
+        } catch (_) {}
 
         if (data?.session) {
           const token = data.session.access_token;

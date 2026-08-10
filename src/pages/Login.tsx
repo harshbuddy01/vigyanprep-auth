@@ -11,8 +11,23 @@ export default function Login() {
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+
+  const handleResetPassword = async () => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      setMessage({ text: 'Password reset link sent to your email!', type: 'success' });
+      setShowForgotPassword(false);
+    } catch (err: any) {
+      setMessage({ text: err.message || 'Failed to send reset link', type: 'error' });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,6 +175,43 @@ export default function Login() {
           )}
 
           {/* Form */}
+          {showForgotPassword ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5 font-semibold">
+                  Reset Password Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/80" />
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="student@example.com"
+                    className="w-full bg-neutral-950 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl text-sm font-semibold uppercase tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 text-black hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                Send Reset Link →
+              </button>
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="text-amber-400 hover:text-amber-300 text-sm"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
@@ -240,7 +292,19 @@ export default function Login() {
             >
               {loading ? "Connecting..." : isSignUp ? "Create Account →" : "Sign In →"}
             </button>
+            {!isSignUp && (
+              <div className="text-center mt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setShowForgotPassword(true)} 
+                  className="text-amber-400 hover:text-amber-300 text-sm"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </form>
+          )}
 
         </div>
       </div>

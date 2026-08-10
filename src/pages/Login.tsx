@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Eye, EyeOff, Lock, Mail, User, CheckCircle2, AlertCircle } from "lucide-react";
 
-import { setCookie } from "../lib/cookies";
+import { setCookie, getCookie, deleteCookie } from "../lib/cookies";
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);

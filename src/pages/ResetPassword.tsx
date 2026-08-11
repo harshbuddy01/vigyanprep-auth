@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 
 export default function ResetPassword() {
@@ -15,14 +15,14 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Supabase puts the access_token in the URL hash when coming from email link
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessionReady(true);
       }
     });
 
     // Also check if we already have a session (token was processed)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
       if (session) setSessionReady(true);
     });
 

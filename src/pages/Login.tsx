@@ -34,6 +34,8 @@ export default function Login() {
   }, []);
 
   const handleResetPassword = async () => {
+    setLoading(true);
+    setMessage(null);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/reset-password`
@@ -43,6 +45,8 @@ export default function Login() {
       setShowForgotPassword(false);
     } catch (err: any) {
       setMessage({ text: err.message || 'Failed to send reset link', type: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,7 +220,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold uppercase tracking-wider bg-gradient-to-r from-amber-400 to-orange-500 text-black hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Send Reset Link →
+                {loading ? "Sending..." : "Send Reset Link →"}
               </button>
               <div className="text-center mt-4">
                 <button

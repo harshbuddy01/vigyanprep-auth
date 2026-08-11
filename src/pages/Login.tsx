@@ -152,11 +152,15 @@ export default function Login() {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#16120b]" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#16120b] via-transparent to-transparent opacity-80" />
 
-          {/* Overlay Text */}
+          {/* Overlay Text & Logo — Clicking logo redirects to homepage */}
           <div className="absolute bottom-8 left-8 right-8 z-10">
-            <h2 className="font-serif italic text-3xl font-bold text-amber-100 drop-shadow-2xl">
-              VIGYAN<span className="font-sans text-xs tracking-normal uppercase text-amber-400 font-semibold ml-1">.prep</span>
-            </h2>
+            <a href="https://vigyanprep.com/" title="Go to VigyanPrep Homepage" className="inline-block group">
+              <img
+                src="/vigyan-logo-light.png"
+                alt="VigyanPrep Official Logo"
+                className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-2xl mb-1"
+              />
+            </a>
             <p className="text-xs text-neutral-300 mt-1.5 font-light leading-relaxed max-w-xs drop-shadow">
               Explore &middot; Learn &middot; Discover &middot; Knowledge
             </p>
@@ -172,11 +176,15 @@ export default function Login() {
         <div className="w-full md:w-1/2 bg-[#16120b] p-8 sm:p-12 flex flex-col justify-center">
           
           {/* Mobile Header */}
-          <div className="text-center mb-6 md:hidden">
-            <h1 className="font-serif italic text-3xl font-bold text-amber-100 tracking-wider">
-              VIGYAN<span className="font-sans text-xs tracking-normal uppercase text-amber-400 font-semibold ml-1">.prep</span>
-            </h1>
-            <p className="text-xs text-neutral-400 mt-1">Student Portal Authentication</p>
+          <div className="flex flex-col items-center mb-6 md:hidden">
+            <a href="https://vigyanprep.com/" title="Go to VigyanPrep Homepage" className="group mb-2">
+              <img
+                src="/vigyan-logo-light.png"
+                alt="VigyanPrep Official Logo"
+                className="h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
+            </a>
+            <p className="text-xs text-neutral-400">Student Portal Authentication</p>
           </div>
 
           {/* Desktop Header */}

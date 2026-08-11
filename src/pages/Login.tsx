@@ -158,7 +158,7 @@ export default function Login() {
               <img
                 src="/vigyan-logo-light.png"
                 alt="VigyanPrep Official Logo"
-                className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-2xl mb-1"
+                className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-2xl mb-1"
               />
             </a>
             <p className="text-xs text-neutral-300 mt-1.5 font-light leading-relaxed max-w-xs drop-shadow">

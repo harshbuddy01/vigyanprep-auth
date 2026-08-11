@@ -57,33 +57,38 @@ export default function Login() {
 
     try {
       if (isSignUp) {
+        // Sign up — pass emailRedirectTo so confirmation email points to production
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName } },
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/confirm-email`,
+          },
         });
         if (error) throw error;
-        try {
-          await supabase.from("students").upsert({ email, full_name: fullName }, { onConflict: "email" });
-        } catch (_) {}
-        try {
-          await supabase.from("users").upsert({ email, full_name: fullName, role: "student" }, { onConflict: "email" });
-        } catch (_) {}
 
-        if (data?.session) {
-          const token = data.session.access_token;
-          setCookie("student_token", token);
-          setCookie("student_name", fullName);
-          setCookie("student_email", email);
-          localStorage.setItem("student_token", token);
-          localStorage.setItem("student_name", fullName);
-          localStorage.setItem("student_email", email);
+        // If identities is empty, this email is already registered
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error("This email is already registered. Please sign in instead.");
         }
 
-        setMessage({ text: "Account created successfully! Check your email to confirm.", type: "success" });
+        // DO NOT insert into DB yet — wait until they confirm their email.
+        // The /confirm-email page will handle DB insertion after Supabase confirms the session.
+
+        setMessage({
+          text: "✉️ A confirmation email has been sent to " + email + ". Please click the link in it to activate your account.",
+          type: "success",
+        });
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
+        if (signInError) {
+          // Give a user-friendly message for unconfirmed email
+          if (signInError.message.toLowerCase().includes("email not confirmed")) {
+            throw new Error("Your email is not confirmed yet. Please check your inbox and click the confirmation link first.");
+          }
+          throw signInError;
+        }
 
         if (data?.session) {
           const token = data.session.access_token;

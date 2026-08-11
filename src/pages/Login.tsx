@@ -17,15 +17,36 @@ export default function Login() {
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
 
   React.useEffect(() => {
-    const token = getCookie("student_token") || localStorage.getItem("student_token");
-    if (token) {
+    const cookieToken = getCookie("student_token");
+    const localToken = localStorage.getItem("student_token");
+
+    // Cookie is the cross-subdomain truth source.
+    // If cookie is gone (user logged out) but localStorage still has a stale token, clean it up.
+    if (!cookieToken && localToken) {
+      localStorage.removeItem("student_token");
+      localStorage.removeItem("student_name");
+      localStorage.removeItem("student_email");
+      return; // Don't redirect — user logged out
+    }
+
+    // Also sign out of Supabase's internal session on logout
+    if (!cookieToken) {
+      supabase.auth.signOut().catch(() => {});
+      return;
+    }
+
+    if (cookieToken) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const payload = JSON.parse(atob(cookieToken.split('.')[1]));
         if (payload.exp && payload.exp * 1000 > Date.now()) {
           window.location.href = "https://test.vigyanprep.com/dashboard";
+        } else {
+          // Token expired — clean up
+          localStorage.removeItem("student_token");
+          localStorage.removeItem("student_name");
+          localStorage.removeItem("student_email");
         }
       } catch (err) {
-        // Clean up invalid token
         localStorage.removeItem("student_token");
         localStorage.removeItem("student_name");
         localStorage.removeItem("student_email");

@@ -136,6 +136,20 @@ export default function Login() {
   };
 
   const handleSocialAuth = async (provider: 'google' | 'azure' | 'apple') => {
+    if (provider === 'azure') {
+      setMessage({ 
+        text: "Microsoft Sign-In is coming soon! Please sign in with Google or your Email & Password.", 
+        type: "error" 
+      });
+      return;
+    }
+    if (provider === 'apple') {
+      setMessage({ 
+        text: "Apple Sign-In is coming soon! Please sign in with Google or your Email & Password.", 
+        type: "error" 
+      });
+      return;
+    }
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({

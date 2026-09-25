@@ -16,37 +16,47 @@ export default function Login() {
   const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
 
   React.useEffect(() => {
+    // 1. Listen for OAuth callbacks (Google Sign-In)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.access_token) {
+        const token = session.access_token;
+        const name = session.user?.user_metadata?.full_name || session.user?.email?.split("@")[0] || "Student";
+        const email = session.user?.email || "";
+
+        // Set shared cookies for test.vigyanprep.com
+        document.cookie = `student_token=${token}; domain=.vigyanprep.com; path=/; max-age=2592000; SameSite=Lax; Secure`;
+        document.cookie = `student_name=${encodeURIComponent(name)}; domain=.vigyanprep.com; path=/; max-age=2592000; SameSite=Lax; Secure`;
+        document.cookie = `student_email=${encodeURIComponent(email)}; domain=.vigyanprep.com; path=/; max-age=2592000; SameSite=Lax; Secure`;
+
+        setCookie("student_token", token);
+        setCookie("student_name", name);
+        setCookie("student_email", email);
+
+        localStorage.setItem("student_token", token);
+        localStorage.setItem("student_name", name);
+        localStorage.setItem("student_email", email);
+
+        // Redirect immediately to dashboard
+        window.location.href = "https://test.vigyanprep.com/dashboard";
+      }
+    });
+
+    // 2. Check if already logged in via cookie
     const cookieToken = getCookie("student_token");
-    const localToken = localStorage.getItem("student_token");
-
-    if (!cookieToken && localToken) {
-      localStorage.removeItem("student_token");
-      localStorage.removeItem("student_name");
-      localStorage.removeItem("student_email");
-      return;
-    }
-
-    if (!cookieToken) {
-      supabase.auth.signOut().catch(() => {});
-      return;
-    }
-
     if (cookieToken) {
       try {
         const payload = JSON.parse(atob(cookieToken.split('.')[1]));
         if (payload.exp && payload.exp * 1000 > Date.now()) {
           window.location.href = "https://test.vigyanprep.com/dashboard";
-        } else {
-          localStorage.removeItem("student_token");
-          localStorage.removeItem("student_name");
-          localStorage.removeItem("student_email");
         }
       } catch (err) {
-        localStorage.removeItem("student_token");
-        localStorage.removeItem("student_name");
-        localStorage.removeItem("student_email");
+        // ignore
       }
     }
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleResetPassword = async () => {

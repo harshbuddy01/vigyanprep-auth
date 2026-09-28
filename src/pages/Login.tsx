@@ -106,15 +106,10 @@ export default function Login() {
           type: "success",
         });
       } else {
+        let authenticatedSession = false;
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) {
-          if (signInError.message.toLowerCase().includes("email not confirmed")) {
-            throw new Error("Your email is not confirmed yet. Please check your inbox and click the confirmation link first.");
-          }
-          throw signInError;
-        }
-
-        if (data?.session) {
+        
+        if (!signInError && data?.session) {
           const token = data.session.access_token;
           const name = data.session.user?.user_metadata?.full_name || data.session.user?.email?.split("@")[0] || "Student";
           
@@ -131,6 +126,49 @@ export default function Login() {
           localStorage.setItem("student_token", token);
           localStorage.setItem("student_name", name);
           localStorage.setItem("student_email", email);
+          authenticatedSession = true;
+        } else if (signInError) {
+          if (signInError.message.toLowerCase().includes("email not confirmed")) {
+            throw new Error("Your email is not confirmed yet. Please check your inbox and click the confirmation link first.");
+          }
+
+          // Fallback: Check if user has an active VIP Demo Pass code (e.g. VP-XXXXXX)
+          try {
+            const passRes = await fetch("https://api.vigyanprep.com/api/auth/student-login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim(), password: password.trim() })
+            });
+
+            if (passRes.ok) {
+              const passData = await passRes.json();
+              if (passData.success && passData.token) {
+                const token = passData.token;
+                const name = passData.user?.full_name || email.split("@")[0] || "Student";
+
+                if (rememberMe) {
+                  setCookie("student_token", token);
+                  setCookie("student_name", name);
+                  setCookie("student_email", email);
+                } else {
+                  document.cookie = `student_token=${token}; domain=.vigyanprep.com; path=/;`;
+                  document.cookie = `student_name=${encodeURIComponent(name)}; domain=.vigyanprep.com; path=/;`;
+                  document.cookie = `student_email=${encodeURIComponent(email)}; domain=.vigyanprep.com; path=/;`;
+                }
+
+                localStorage.setItem("student_token", token);
+                localStorage.setItem("student_name", name);
+                localStorage.setItem("student_email", email);
+                authenticatedSession = true;
+              }
+            }
+          } catch (passErr) {
+            console.warn("VIP pass login fallback error:", passErr);
+          }
+
+          if (!authenticatedSession) {
+            throw signInError;
+          }
         }
 
         setMessage({ text: "Login successful! Loading your student portal...", type: "success" });

@@ -17,7 +17,7 @@ export default function Login() {
 
   React.useEffect(() => {
     // 1. Listen for OAuth callbacks (Google Sign-In)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.access_token) {
         const token = session.access_token;
         const name = session.user?.user_metadata?.full_name || session.user?.email?.split("@")[0] || "Student";
